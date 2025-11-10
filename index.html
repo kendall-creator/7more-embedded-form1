@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>7More Participant Form</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .wrapper {
+      max-width: 480px;
+      margin: 40px auto;
+      background: #ffffff;
+      padding: 24px 20px 28px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin: 0 0 4px;
+      text-align: center;
+    }
+    p.sub {
+      margin: 0 0 18px;
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin: 12px 0 4px;
+      color: #333;
+    }
+    input, textarea, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #d0d0d0;
+      font-size: 0.95rem;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #8a2be2;
+      box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.15);
+    }
+    button {
+      margin-top: 18px;
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 999px;
+      border: none;
+      background: #8a2be2;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .note {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #777;
+      text-align: center;
+    }
+    .success {
+      margin-top: 14px;
+      padding: 10px 12px;
+      background: #e7f7ed;
+      color: #145c32;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .error {
+      margin-top: 14px;
+      padding: 10px 12px;
+      background: #fde7e7;
+      color: #8b1a1a;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+  </style>
+
+  <!-- Firebase (web) SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+    // Your existing Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAiYOUSiYKcgn-uAGi_rMLwMmNyENMSq20",
+      authDomain: "sevenmore-app-5a969.firebaseapp.com",
+      databaseURL: "https://sevenmore-app-5a969-default-rtdb.firebaseio.com",
+      projectId: "sevenmore-app-5a969",
+      storageBucket: "sevenmore-app-5a969.firebasestorage.app",
+      messagingSenderId: "110371002953",
+      appId: "1:110371002953:web:79c44b39188e2649a0fd98"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+
+      const submitButton = document.getElementById("submit");
+      const successBox = document.getElementById("success");
+      const errorBox = document.getElementById("error");
+
+      successBox.style.display = "none";
+      errorBox.style.display = "none";
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const notes = document.getElementById("notes").value.trim();
+
+      if (!name) {
+        errorBox.textContent = "Please enter a name.";
+        errorBox.style.display = "block";
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Submitting...";
+
+      try {
+        // 👇 Change "participants" to whatever path your app uses
+        const participantsRef = ref(db, "participants");
+        const newRef = push(participantsRef);
+
+        await set(newRef, {
+          name,
+          email,
+          phone,
+          notes,
+          source: "web-form",
+          createdAt: Date.now()
+        });
+
+        successBox.textContent = "Thank you! Your information has been submitted.";
+        successBox.style.display = "block";
+        (event.target).reset();
+      } catch (err) {
+        console.error(err);
+        errorBox.textContent = "Something went wrong submitting the form. Please try again.";
+        errorBox.style.display = "block";
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Submit";
+      }
+    }
+
+    window.handleSubmit = handleSubmit;
+  </script>
+</head>
+<body>
+  <div class="wrapper">
+    <h1>7More Participant Form</h1>
+    <p class="sub">Complete this form to be added into the 7More app.</p>
+
+    <form onsubmit="handleSubmit(event)">
+      <label for="name">Name *</label>
+      <input id="name" type="text" required />
+
+      <label for="email">Email</label>
+      <input id="email" type="email" />
+
+      <label for="phone">Phone</label>
+      <input id="phone" type="tel" />
+
+      <label for="notes">Notes</label>
+      <textarea id="notes" rows="3" placeholder="Anything else we should know?"></textarea>
+
+      <button id="submit" type="submit">Submit</button>
+    </form>
+
+    <div id="success" class="success"></div>
+    <div id="error" class="error"></div>
+
+    <div class="note">
+      Your details are saved securely in our 7More app database.
+    </div>
+  </div>
+</body>
+</html>
